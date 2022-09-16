@@ -6,15 +6,13 @@
 //  主程序
 //
 
-
 const express = require('express')
 const mongoose = require('mongoose')
 const { version, license } = require('./package.json')
 const {Notice, Client, User} = require('./db.js')
 
-
-
 const tokenreg = /^[A-F,a-f,0-9]{16}$/
+
 const PORT = 8080
 
 var app = express()
@@ -30,11 +28,6 @@ app.get('/', (req, res)=>{
 //      token: 令牌（格式为字符串，内容为十六位十六进制数）
 //      obj: 查询对象。(LatestUpdateDate 最新更新时间；NoticesList 所有通知的列表)
 app.get('/query/:token/:obj', (req, res)=>{
-
-    //  测试用JSON数据
-    var validTokens = ['40234AC45CFEADDE']
-    var luduxts = new Date().getTime().toString()
-    var demoNotices = require('./notices.json')
 
     //  obj:
     //	   -1 -> (undefined, response 404)
@@ -69,37 +62,34 @@ app.get('/query/:token/:obj', (req, res)=>{
 				let result = new Object()
 				if(obj){
 					let nUUIDList = Array.from(doc.notices)
-                    result = {Notices: []}
-                    
-
-                    for(var a = 0; a < nUUIDList.length; a++){
-                        new Promise(function(resolve, reject){
-                            Notice.findOne({uuid: nUUIDList[a]}, function(err, Ndoc){
-                                if(err) reject(err);
-                                else resolve(Ndoc._doc)
-                            })
-                        }).then(function(Ndoc){
-                            switch(Ndoc.level){
-                                case 0: Ndoc.level = "D"; break;
-                                case 1: Ndoc.level = "C"; break;
-                                case 2: Ndoc.level = "B"; break;
-                                case 3: Ndoc.level = "A"; break;
-                            }
-                            result.Notices.push(Ndoc)
-                            if(result.Notices.length == nUUIDList.length){
-                                res.status(200)
-                                res.json(result)
-                            }
-                        }).catch(function(err){
-                            throw err
-                        })
-                    }
-
+					result = {Notices: []}
+			                for(var a = 0; a < nUUIDList.length; a++){
+              	        			new Promise(function(resolve, reject){
+		                            		Notice.findOne({uuid: nUUIDList[a]}, function(err, Ndoc){
+			                                if(err) reject(err);
+        	        		                else resolve(Ndoc._doc)
+			                            })
+                			        }).then(function(Ndoc){
+	                        	    		switch(Ndoc.level){
+		                        	        	case 0: Ndoc.level = "D"; break;
+	                		        	        case 1: Ndoc.level = "C"; break;
+        	                        			case 2: Ndoc.level = "B"; break;
+				                                case 3: Ndoc.level = "A"; break;
+							}
+							result.Notices.push(Ndoc)
+							if(result.Notices.length == nUUIDList.length){
+								res.status(200)
+								res.json(result)
+							 }
+						}).catch(function(err){
+	                				throw err
+        	                		})
+					}
 				}else{
 					result = {LatestUpdateDate: doc.NUT}
-                    res.status(200)
-                    res.json(result)
-                    return 0
+			                res.status(200)
+			                res.json(result)
+			                return 0
 				}
 			}catch(err){
 				res.status(500).send(err)
